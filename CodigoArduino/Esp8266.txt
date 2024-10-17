@@ -1,0 +1,105 @@
+  #include <ESP8266WiFi.h>
+  #include <ESP8266WebServer.h>
+  #include <PubSubClient.h>
+  
+  // Configura los datos de tu red WiFi
+  const char* ssid = "wifi_uach";
+  const char* password = "";
+
+  // Declara el cliente MQTT
+  WiFiClient wifiClient;
+  PubSubClient mqttClient(wifiClient);
+
+  const char* mqttServer = "localhost"; // Cambia esto por la IP de tu broker
+  const int mqttPort = 1883;
+
+  // Crea un objeto servidor web en el puerto 80
+  ESP8266WebServer server(80);
+
+  // Variables globales para almacenar los datos recibidos del Arduino
+  String temperatura = "N/A";
+  String hora = "N/A";
+  String color = "N/A";
+
+  void setup() {
+    Serial.begin(9600);  // Inicializa la comunicación serial para la ESP8266
+
+    // Conexión a la red WiFi
+    WiFi.begin(ssid, password);
+    Serial.print("Conectando a WiFi");
+
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(1000);
+      Serial.print(".");
+    }
+
+    Serial.println("");
+    Serial.print("Conectado a WiFi. Dirección IP: ");
+    Serial.println(WiFi.localIP());
+
+    // Define la ruta raíz ("/") y asigna una función que se ejecutará cuando se acceda a esa ruta
+    server.on("/", handleRoot);
+
+    // Define la ruta "/update" para manejar las solicitudes de actualización de datos
+    server.on("/update", handleUpdate);
+
+    // Inicia el servidor
+    server.begin();
+    Serial.println("Servidor iniciado");
+  }
+
+  // Bucle principal
+  void loop() {
+    // Verifica si hay datos disponibles en el puerto serial
+    if (Serial.available() > 0) {
+      // Lee los datos enviados por el Arduino en un formato de una sola línea:
+      // Formato esperado: "temperatura:hora:color"
+      String data = Serial.readStringUntil('\n');
+      int separatorIndex1 = data.indexOf(':');
+      int separatorIndex2 = data.lastIndexOf(':');
+
+      if (separatorIndex1 != -1 && separatorIndex2 != -1 && separatorIndex1 != separatorIndex2) {
+        temperatura = data.substring(0, separatorIndex1);
+        hora = data.substring(separatorIndex1 + 1, separatorIndex2);
+        color = data.substring(separatorIndex2 + 1);
+      }
+    }
+
+    // Atiende las solicitudes HTTP que lleguen al servidor
+    server.handleClient();
+  }
+
+  // Función que maneja la solicitud a la ruta raíz "/"
+  void handleRoot() {
+    // Se construye la página web que se enviará como respuesta a la solicitud
+    String html = "<html><head>";
+    html += "<meta http-equiv='refresh' content='2'>";  // Actualiza automáticamente la página cada 2 segundos
+    html += "<script>";
+    html += "function fetchData() {";
+    html += "fetch('/update')";  // Solicita los datos actualizados
+    html += ".then(response => response.text())";
+    html += ".then(data => {";
+    html += "let values = data.split(',');";
+    html += "document.getElementById('hora').innerHTML = 'Hora: ' + values[0];";
+    html += "document.getElementById('temperatura').innerHTML = 'Temperatura: ' + values[1];";
+    html += "document.getElementById('color').innerHTML = 'Estado del semaforo: ' + values[2];";
+    html += "});";
+    html += "}";
+    html += "setInterval(fetchData, 500);";  // Actualiza los datos cada 2 segundos
+    html += "</script>";
+    html += "</head><body onload='fetchData()'>";                        // Ejecuta la función fetchData al cargar la página
+    html += "<h1>Datos recibidos:</h1>";                                 // Título de la página
+    html += "<p id='hora'>Hora: " + hora + "</p>";                       // Muestra la hora recibida
+    html += "<p id='temperatura'>Temperatura: " + temperatura + "</p>";  // Muestra la temperatura recibida
+    html += "<p id='color'>Estado del semaforo: " + color + "</p>";      // Muestra el estado del semáforo recibido
+    html += "</body></html>";                                            // Cierre del HTML
+
+    // Enviar la respuesta HTTP con el código 200 (OK) y el contenido generado en 'html'
+    server.send(200, "text/html", html);
+  }
+
+  // Función que maneja la solicitud de actualización de datos "/update"
+  void handleUpdate() {
+    String data = hora + "," + temperatura + "," + color;
+    server.send(200, "text/plain", data);
+  }
