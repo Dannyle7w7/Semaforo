@@ -24,7 +24,7 @@ DHT dht(DHTPIN, DHTTYPE);
 rgb_lcd lcd;
 
 //Variables de cambio
-float Tiemporojo    =   70000 ;       //Tiempo que estara el rojo despues de presionar el boton MILIS
+float Tiemporojo    =   60000;        //Tiempo que estara el rojo despues de presionar el boton MILIS
 int Iniciosemaforo  =   6;             //Hora que empieza a trabajar con regularidad el semaforo 
 int Finalsemaforo   =   23;             //Hora que finaliza y se pone en amarillo 
 
@@ -64,6 +64,7 @@ void setup() {
 
   if (rtc.lostPower()) {
     rtc.adjust(DateTime(__DATE__, __TIME__));
+
   }
 
   dht.begin();
@@ -132,7 +133,7 @@ void handleNormalOperation() {
 
   if (pedestrianButtonPressed) {
     handlePedestrianSequence();
-  } else if (hour >= 11 && hour < 19) {
+  } else if (hour >= Iniciosemaforo && hour < Finalsemaforo) {
     handleRegularSequence();
   } else {
     handleOffHoursSequence();
@@ -221,7 +222,7 @@ void updateLCD(DateTime now) {
       semaphoreState = "Verde";
     } else if (currentMillis - lastMillis < 10000) {
       semaphoreState = "Ama";
-    } else if (currentMillis - lastMillis < 180000) {
+    } else if (currentMillis - lastMillis < Tiemporojo) {
       semaphoreState = "Rojo";
     }
   } else if (errorState) {
@@ -243,7 +244,7 @@ void updateLCD(DateTime now) {
   lcd.print(" ");
   lcd.print(semaphoreState);*/
 
-Serial.print(now. hour());
+Serial.print(now.hour());
 Serial.print(":");
 Serial.print(now.minute());
 Serial.print(":");
@@ -267,5 +268,5 @@ void forceRestart() {
   wdt_enable(WDTO_15MS);
   while (1) {
     // Esperar a que el watchdog reinicie el sistema
-   }
-}
+    }
+} 

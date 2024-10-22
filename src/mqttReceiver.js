@@ -7,7 +7,7 @@ mqttScript.onload = function () {
     // Función para conectarse al broker MQTT y recibir datos
     function connectToBroker() {
         const brokerUrl = 'ws://localhost:8888';  // Cambia esto por la URL del broker en formato WebSocket
-        const topic = 'semaforo/datos';  // El tema al que se suscribirá
+        const topic = 'semaforo/data';  // El tema al que se suscribirá
         const clientId = 'mqttjs_' + Math.random().toString(16).substr(2, 8);  // ID único del cliente MQTT
 
         // Conectar al broker MQTT

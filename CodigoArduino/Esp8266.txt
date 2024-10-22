@@ -1,3 +1,5 @@
+Codigo 22 10 2024
+
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <PubSubClient.h>
@@ -5,15 +7,17 @@
 
 // Configura los datos de tu red WiFi
 const char* ssid = "wifi_uach";
-const char* password = "";
+const char* password = ""; // Coloca la contraseña de tu red WiFi aquí
 
 // Declara el cliente MQTT
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
 
 // Cambia esto por la IP de tu broker
-const char* mqttServer = "192.168.1.X"; // Asegúrate de usar la IP correcta
-const int mqttPort = 8888;  // Cambiado a 8888 para WebSocket
+const char* mqttServer = "10.20.8.199"; // IP de tu broker
+const int mqttPort = 1883;  // Puerto del broker
+const char* mqttUsername = "admin"; // Nombre de usuario para la autenticación
+const char* mqttPassword = "admin"; // Contraseña para la autenticación
 const char* mqttTopic = "semaforo/data"; // Tema al que enviamos los datos
 
 // Crea un objeto servidor web en el puerto 80
@@ -62,15 +66,19 @@ void loop() {
   // Verifica si hay datos disponibles en el puerto serial
   if (Serial.available() > 0) {
     // Lee los datos enviados por el Arduino en un formato de una sola línea:
-    // Formato esperado: "temperatura:hora:color"
+    // Formato esperado: "hh:mm:ss:temperatura:estadoSemaforo"
     String data = Serial.readStringUntil('\n');
-    int separatorIndex1 = data.indexOf(':');
-    int separatorIndex2 = data.lastIndexOf(':');
 
-    if (separatorIndex1 != -1 && separatorIndex2 != -1 && separatorIndex1 != separatorIndex2) {
-      temperatura = data.substring(0, separatorIndex1);
-      hora = data.substring(separatorIndex1 + 1, separatorIndex2);
-      color = data.substring(separatorIndex2 + 1);
+    // Encuentra los índices de los separadores
+    int separatorIndex1 = data.indexOf(':');
+    int separatorIndex2 = data.indexOf(':', separatorIndex1 + 1);
+    int separatorIndex3 = data.indexOf(':', separatorIndex2 + 1);
+    int separatorIndex4 = data.indexOf(':', separatorIndex3 + 1);
+
+    if (separatorIndex1 != -1 && separatorIndex2 != -1 && separatorIndex3 != -1 && separatorIndex4 != -1) {
+      hora = data.substring(0, separatorIndex3); // Hora completa (hh:mm:ss)
+      temperatura = data.substring(separatorIndex3 + 1, separatorIndex4); // Temperatura
+      color = data.substring(separatorIndex4 + 1); // Estado del semáforo
 
       // Publicar los datos en formato JSON a través de MQTT solo si está conectado
       if (mqttConnected) {
@@ -90,7 +98,8 @@ void loop() {
 
 // Función para conectar al broker MQTT
 void connectMQTT() {
-  if (mqttClient.connect("ESP8266Client")) {
+  // Intenta conectar con el nombre de cliente y las credenciales
+  if (mqttClient.connect("ESP8266Client", mqttUsername, mqttPassword)) {
     mqttConnected = true; // Actualiza la variable de conexión
     Serial.println("Conectado al broker MQTT");
   } else {
@@ -104,7 +113,7 @@ void connectMQTT() {
 void handleRoot() {
   // Se construye la página web que se enviará como respuesta a la solicitud
   String html = "<html><head>";
-  html += "<meta http-equiv='refresh' content='2'>";  // Actualiza automáticamente la página cada 2 segundos
+  html += "<meta http-equiv='refresh' content='1'>";  // Actualiza automáticamente la página cada 1 segundo
   html += "<script>";
   html += "function fetchData() {";
   html += "fetch('/update')";  // Solicita los datos actualizados
@@ -113,16 +122,16 @@ void handleRoot() {
   html += "let values = data.split(',');";
   html += "document.getElementById('hora').innerHTML = 'Hora: ' + values[0];";
   html += "document.getElementById('temperatura').innerHTML = 'Temperatura: ' + values[1];";
-  html += "document.getElementById('color').innerHTML = 'Estado del semáforo: ' + values[2];";
+  html += "document.getElementById('color').innerHTML = 'Estado del semaforo: ' + values[2];";
   html += "});";
   html += "}";  
-  html += "setInterval(fetchData, 500);";  // Actualiza los datos cada 0.5 segundos
+  html += "setInterval(fetchData, 1000);";  // Actualiza los datos cada 1 segundo
   html += "</script>";
   html += "</head><body onload='fetchData()'>"; // Ejecuta la función fetchData al cargar la página
   html += "<h1>Datos recibidos:</h1>"; // Título de la página
   html += "<p id='hora'>Hora: " + hora + "</p>"; // Muestra la hora recibida
   html += "<p id='temperatura'>Temperatura: " + temperatura + "</p>"; // Muestra la temperatura recibida
-  html += "<p id='color'>Estado del semáforo: " + color + "</p>"; // Muestra el estado del semáforo recibido
+  html += "<p id='color'>Estado del semaforo: " + color + "</p>"; // Muestra el estado del semáforo recibido
   html += "</body></html>"; // Cierre del HTML
 
   // Enviar la respuesta HTTP con el código 200 (OK) y el contenido generado en 'html'
