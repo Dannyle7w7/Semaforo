@@ -1,105 +1,149 @@
-  #include <ESP8266WiFi.h>
-  #include <ESP8266WebServer.h>
-  #include <PubSubClient.h>
-  
-  // Configura los datos de tu red WiFi
-  const char* ssid = "wifi_uach";
-  const char* password = "";
+#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
 
-  // Declara el cliente MQTT
-  WiFiClient wifiClient;
-  PubSubClient mqttClient(wifiClient);
+// Configura los datos de tu red WiFi
+const char* ssid = "wifi_uach";
+const char* password = "";
 
-  const char* mqttServer = "localhost"; // Cambia esto por la IP de tu broker
-  const int mqttPort = 1883;
+// Declara el cliente MQTT
+WiFiClient wifiClient;
+PubSubClient mqttClient(wifiClient);
 
-  // Crea un objeto servidor web en el puerto 80
-  ESP8266WebServer server(80);
+// Cambia esto por la IP de tu broker
+const char* mqttServer = "192.168.1.X"; // Asegúrate de usar la IP correcta
+const int mqttPort = 8888;  // Cambiado a 8888 para WebSocket
+const char* mqttTopic = "semaforo/data"; // Tema al que enviamos los datos
 
-  // Variables globales para almacenar los datos recibidos del Arduino
-  String temperatura = "N/A";
-  String hora = "N/A";
-  String color = "N/A";
+// Crea un objeto servidor web en el puerto 80
+ESP8266WebServer server(80);
 
-  void setup() {
-    Serial.begin(9600);  // Inicializa la comunicación serial para la ESP8266
+// Variables globales para almacenar los datos recibidos del Arduino
+String temperatura = "N/A";
+String hora = "N/A";
+String color = "N/A";
+bool mqttConnected = false; // Variable para rastrear la conexión al broker
 
-    // Conexión a la red WiFi
-    WiFi.begin(ssid, password);
-    Serial.print("Conectando a WiFi");
+void setup() {
+  Serial.begin(9600);  // Inicializa la comunicación serial para la ESP8266
 
-    while (WiFi.status() != WL_CONNECTED) {
-      delay(1000);
-      Serial.print(".");
-    }
+  // Conexión a la red WiFi
+  WiFi.begin(ssid, password);
+  Serial.print("Conectando a WiFi");
 
-    Serial.println("");
-    Serial.print("Conectado a WiFi. Dirección IP: ");
-    Serial.println(WiFi.localIP());
-
-    // Define la ruta raíz ("/") y asigna una función que se ejecutará cuando se acceda a esa ruta
-    server.on("/", handleRoot);
-
-    // Define la ruta "/update" para manejar las solicitudes de actualización de datos
-    server.on("/update", handleUpdate);
-
-    // Inicia el servidor
-    server.begin();
-    Serial.println("Servidor iniciado");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
   }
 
-  // Bucle principal
-  void loop() {
-    // Verifica si hay datos disponibles en el puerto serial
-    if (Serial.available() > 0) {
-      // Lee los datos enviados por el Arduino en un formato de una sola línea:
-      // Formato esperado: "temperatura:hora:color"
-      String data = Serial.readStringUntil('\n');
-      int separatorIndex1 = data.indexOf(':');
-      int separatorIndex2 = data.lastIndexOf(':');
+  Serial.println("");
+  Serial.print("Conectado a WiFi. Dirección IP: ");
+  Serial.println(WiFi.localIP());
 
-      if (separatorIndex1 != -1 && separatorIndex2 != -1 && separatorIndex1 != separatorIndex2) {
-        temperatura = data.substring(0, separatorIndex1);
-        hora = data.substring(separatorIndex1 + 1, separatorIndex2);
-        color = data.substring(separatorIndex2 + 1);
+  // Configura el servidor MQTT
+  mqttClient.setServer(mqttServer, mqttPort);
+
+  // Conectar al broker MQTT
+  connectMQTT();
+
+  // Define la ruta raíz ("/") y asigna una función que se ejecutará cuando se acceda a esa ruta
+  server.on("/", handleRoot);
+
+  // Define la ruta "/update" para manejar las solicitudes de actualización de datos
+  server.on("/update", handleUpdate);
+
+  // Inicia el servidor
+  server.begin();
+  Serial.println("Servidor iniciado");
+}
+
+void loop() {
+  // Verifica si hay datos disponibles en el puerto serial
+  if (Serial.available() > 0) {
+    // Lee los datos enviados por el Arduino en un formato de una sola línea:
+    // Formato esperado: "temperatura:hora:color"
+    String data = Serial.readStringUntil('\n');
+    int separatorIndex1 = data.indexOf(':');
+    int separatorIndex2 = data.lastIndexOf(':');
+
+    if (separatorIndex1 != -1 && separatorIndex2 != -1 && separatorIndex1 != separatorIndex2) {
+      temperatura = data.substring(0, separatorIndex1);
+      hora = data.substring(separatorIndex1 + 1, separatorIndex2);
+      color = data.substring(separatorIndex2 + 1);
+
+      // Publicar los datos en formato JSON a través de MQTT solo si está conectado
+      if (mqttConnected) {
+        sendMQTTData();
       }
     }
-
-    // Atiende las solicitudes HTTP que lleguen al servidor
-    server.handleClient();
   }
 
-  // Función que maneja la solicitud a la ruta raíz "/"
-  void handleRoot() {
-    // Se construye la página web que se enviará como respuesta a la solicitud
-    String html = "<html><head>";
-    html += "<meta http-equiv='refresh' content='2'>";  // Actualiza automáticamente la página cada 2 segundos
-    html += "<script>";
-    html += "function fetchData() {";
-    html += "fetch('/update')";  // Solicita los datos actualizados
-    html += ".then(response => response.text())";
-    html += ".then(data => {";
-    html += "let values = data.split(',');";
-    html += "document.getElementById('hora').innerHTML = 'Hora: ' + values[0];";
-    html += "document.getElementById('temperatura').innerHTML = 'Temperatura: ' + values[1];";
-    html += "document.getElementById('color').innerHTML = 'Estado del semaforo: ' + values[2];";
-    html += "});";
-    html += "}";
-    html += "setInterval(fetchData, 500);";  // Actualiza los datos cada 2 segundos
-    html += "</script>";
-    html += "</head><body onload='fetchData()'>";                        // Ejecuta la función fetchData al cargar la página
-    html += "<h1>Datos recibidos:</h1>";                                 // Título de la página
-    html += "<p id='hora'>Hora: " + hora + "</p>";                       // Muestra la hora recibida
-    html += "<p id='temperatura'>Temperatura: " + temperatura + "</p>";  // Muestra la temperatura recibida
-    html += "<p id='color'>Estado del semaforo: " + color + "</p>";      // Muestra el estado del semáforo recibido
-    html += "</body></html>";                                            // Cierre del HTML
+  // Atiende las solicitudes HTTP que lleguen al servidor
+  server.handleClient();
 
-    // Enviar la respuesta HTTP con el código 200 (OK) y el contenido generado en 'html'
-    server.send(200, "text/html", html);
+  // Intentar reconectar al broker si no está conectado
+  if (!mqttConnected) {
+    connectMQTT();
   }
+}
 
-  // Función que maneja la solicitud de actualización de datos "/update"
-  void handleUpdate() {
-    String data = hora + "," + temperatura + "," + color;
-    server.send(200, "text/plain", data);
+// Función para conectar al broker MQTT
+void connectMQTT() {
+  if (mqttClient.connect("ESP8266Client")) {
+    mqttConnected = true; // Actualiza la variable de conexión
+    Serial.println("Conectado al broker MQTT");
+  } else {
+    Serial.print("Conexión al broker MQTT fallida, rc=");
+    Serial.println(mqttClient.state());
+    delay(2000); // Espera un tiempo antes de volver a intentar
   }
+}
+
+// Función que maneja la solicitud a la ruta raíz "/"
+void handleRoot() {
+  // Se construye la página web que se enviará como respuesta a la solicitud
+  String html = "<html><head>";
+  html += "<meta http-equiv='refresh' content='2'>";  // Actualiza automáticamente la página cada 2 segundos
+  html += "<script>";
+  html += "function fetchData() {";
+  html += "fetch('/update')";  // Solicita los datos actualizados
+  html += ".then(response => response.text())";
+  html += ".then(data => {";
+  html += "let values = data.split(',');";
+  html += "document.getElementById('hora').innerHTML = 'Hora: ' + values[0];";
+  html += "document.getElementById('temperatura').innerHTML = 'Temperatura: ' + values[1];";
+  html += "document.getElementById('color').innerHTML = 'Estado del semáforo: ' + values[2];";
+  html += "});";
+  html += "}";  
+  html += "setInterval(fetchData, 500);";  // Actualiza los datos cada 0.5 segundos
+  html += "</script>";
+  html += "</head><body onload='fetchData()'>"; // Ejecuta la función fetchData al cargar la página
+  html += "<h1>Datos recibidos:</h1>"; // Título de la página
+  html += "<p id='hora'>Hora: " + hora + "</p>"; // Muestra la hora recibida
+  html += "<p id='temperatura'>Temperatura: " + temperatura + "</p>"; // Muestra la temperatura recibida
+  html += "<p id='color'>Estado del semáforo: " + color + "</p>"; // Muestra el estado del semáforo recibido
+  html += "</body></html>"; // Cierre del HTML
+
+  // Enviar la respuesta HTTP con el código 200 (OK) y el contenido generado en 'html'
+  server.send(200, "text/html", html);
+}
+
+// Función que maneja la solicitud de actualización de datos "/update"
+void handleUpdate() {
+  String data = hora + "," + temperatura + "," + color;
+  server.send(200, "text/plain", data);
+}
+
+// Función para enviar los datos en formato JSON a través de MQTT
+void sendMQTTData() {
+  StaticJsonDocument<200> jsonDoc;
+  jsonDoc["hora"] = hora;
+  jsonDoc["temperatura"] = temperatura;
+  jsonDoc["color"] = color;
+
+  char jsonBuffer[256];
+  serializeJson(jsonDoc, jsonBuffer);
+
+  mqttClient.publish(mqttTopic, jsonBuffer);
+}

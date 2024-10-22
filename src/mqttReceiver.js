@@ -1,4 +1,3 @@
-
 // Incluimos la biblioteca mqtt.js usando un script dinámico
 const mqttScript = document.createElement('script');
 mqttScript.src = "https://unpkg.com/mqtt/dist/mqtt.min.js";
@@ -7,14 +6,14 @@ document.head.appendChild(mqttScript);
 mqttScript.onload = function () {
     // Función para conectarse al broker MQTT y recibir datos
     function connectToBroker() {
-        const brokerUrl = 'ws://localhost:8080';  // Cambia esto por la URL del broker en formato WebSocket
+        const brokerUrl = 'ws://localhost:8888';  // Cambia esto por la URL del broker en formato WebSocket
         const topic = 'semaforo/datos';  // El tema al que se suscribirá
         const clientId = 'mqttjs_' + Math.random().toString(16).substr(2, 8);  // ID único del cliente MQTT
 
         // Conectar al broker MQTT
         const client = mqtt.connect(brokerUrl, {
-            username: 'tu_usuario',       // Coloca tu usuario del broker
-            password: 'tu_contraseña'     // Coloca tu contraseña del broker
+            username: 'admin',       // Coloca tu usuario del broker
+            password: 'admin'        // Coloca tu contraseña del broker
         });
 
         // Evento cuando se conecta correctamente
