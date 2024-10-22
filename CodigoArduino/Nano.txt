@@ -24,9 +24,9 @@ DHT dht(DHTPIN, DHTTYPE);
 rgb_lcd lcd;
 
 //Variables de cambio
-float Tiemporojo    =   60000        //Tiempo que estara el rojo despues de presionar el boton MILIS
-int Iniciosemaforo  =   6             //Hora que empieza a trabajar con regularidad el semaforo 
-int Finalsemaforo   =   23             //Hora que finaliza y se pone en amarillo 
+float Tiemporojo    =   70000 ;       //Tiempo que estara el rojo despues de presionar el boton MILIS
+int Iniciosemaforo  =   6;             //Hora que empieza a trabajar con regularidad el semaforo 
+int Finalsemaforo   =   23;             //Hora que finaliza y se pone en amarillo 
 
 bool pedestrianButtonPressed = false;
 unsigned long lastMillis = 0;
@@ -63,7 +63,7 @@ void setup() {
   }
 
   if (rtc.lostPower()) {
-    rtc.adjust(DateTime(F(_DATE), F(TIME_)));
+    rtc.adjust(DateTime(__DATE__, __TIME__));
   }
 
   dht.begin();
@@ -267,5 +267,5 @@ void forceRestart() {
   wdt_enable(WDTO_15MS);
   while (1) {
     // Esperar a que el watchdog reinicie el sistema
-  }
-} 
+   }
+}
