@@ -1,41 +1,44 @@
-console.log('mqttReceiver.js cargado correctamente');  // Verifica que el script se carga
+// Conexión con el broker MQTT mediante WebSockets
+const client = mqtt.connect('ws://localhost:8888', {
+    username: 'admin',
+    password: 'admin'
+});
 
-// Función para conectarse al broker MQTT
+// Función para conectarse al broker
 function connectToBroker() {
-    const brokerUrl = 'mqtt://10.20.8.199:1883';  // Cambia a la IP correcta si no es localhost
-    const topic = 'semaforo/data';
-    const clientId = 'mqttjs_' + Math.random().toString(16).substr(2, 8);
-
-    console.log('Intentando conectar al broker en ' + brokerUrl);
-
-    // Conectar al broker MQTT
-    const client = mqtt.connect(brokerUrl, {
-        username: 'admin',
-        password: 'admin'
-    });
-
-    client.on('connect', function () {
-        console.log('Conectado al broker MQTT con éxito');
-        client.subscribe(topic, function (err) {
+    client.on('connect', () => {
+        console.log('Conectado al broker MQTT');
+        client.subscribe('semaforo/data', (err) => {
             if (!err) {
-                console.log('Suscrito al tema ' + topic);
+                console.log('Suscrito al tema: semaforo/data');
             } else {
-                console.error('Error al suscribirse al tema:', err);
+                console.error('Error al suscribirse:', err);
             }
         });
     });
 
-    client.on('message', function (topic, message) {
-        console.log('Mensaje recibido del tema', topic, ':', message.toString());
-        // Aquí puedes procesar los datos recibidos
+    // Manejo de los mensajes recibidos
+    client.on('message', (topic, message) => {
+        console.log(`Mensaje en ${topic}: ${message.toString()}`);
+        
+        // Intentar parsear el mensaje
+        try {
+            const data = JSON.parse(message);
+            
+            // Aquí actualizas el HTML con los datos del mensaje
+            document.getElementById('hora').innerText = data.hora || 'No disponible';
+            document.getElementById('temperatura').innerText = data.temperatura || 'No disponible';
+            document.getElementById('color').innerText = data.color || 'No disponible';
+        } catch (error) {
+            console.error('Error al parsear JSON:', error);
+        }
     });
 
-    client.on('error', function (err) {
-        console.error('Error en la conexión MQTT:', err);
+    // Manejo de errores
+    client.on('error', (error) => {
+        console.error('Error de conexión:', error);
     });
 }
 
-// Ejecutar la función al cargar la página
-window.onload = function() {
-    connectToBroker();
-};
+// Llamar a la función para conectar cuando la página esté cargada
+window.onload = connectToBroker;

@@ -3,6 +3,7 @@ const path = require('path');
 const aedes = require('aedes')();
 const net = require('net');
 const WebSocket = require('ws');
+const http = require('http');
 
 // Inicia el servidor Express
 const app = express();
@@ -17,12 +18,12 @@ app.listen(port, () => {
 });
 
 // Configuración del broker MQTT
-const mqttPort = 1883;  // Puerto donde estará escuchando el broker
+const mqttPort = 1883;  // Puerto donde estará escuchando el broker MQTT tradicional
 const websocketPort = 8888; // Puerto para WebSocket
 const USERNAME = 'admin';
 const PASSWORD = 'admin';
 
-// Crea el servidor del broker MQTT
+// Crea el servidor del broker MQTT en el puerto MQTT tradicional (1883)
 const mqttServer = net.createServer(aedes.handle);
 
 // Inicia el broker MQTT
@@ -33,20 +34,20 @@ mqttServer.listen(mqttPort, function () {
     process.exit(1);  // Sale si hay un error crítico
 });
 
-// Crea el servidor WebSocket
-const wsServer = new WebSocket.Server({ port: websocketPort });
+// Configuración del servidor WebSocket con HTTP
+const server = http.createServer();
+const wsServer = new WebSocket.Server({ server });
 
 // Maneja las conexiones WebSocket
 wsServer.on('connection', function (ws) {
+    const stream = WebSocket.createWebSocketStream(ws);
+    aedes.handle(stream);  // Maneja la conexión de WebSocket como MQTT
     console.log('Cliente WebSocket conectado');
+});
 
-    ws.on('message', function (message) {
-        // Puedes manejar los mensajes recibidos aquí
-        console.log('Mensaje recibido de WebSocket:', message);
-    });
-
-    // Enviar un mensaje de bienvenida
-    ws.send('Conexión WebSocket establecida');
+// Inicia el servidor WebSocket en el puerto 8888
+server.listen(websocketPort, function () {
+    console.log(`Broker MQTT corriendo en WebSocket puerto ${websocketPort}`);
 });
 
 // Configura la autenticación del broker MQTT

@@ -1,15 +1,15 @@
-#pip install paho-mqtt Para librerias
+# pip install paho-mqtt Para librerías
 
 import paho.mqtt.client as mqtt
 import json
 import time
 
 # Configuración del broker MQTT
-broker = "localhost"  # Cambia esto por la IP de tu broker
+broker = "192.168.100.73"  # Cambia esto por la IP de tu broker
 port = 1883
-mqttUser = "tu_usuario"  # Usuario del broker MQTT
-mqttPassword = "tu_contraseña"  # Contraseña del broker MQTT
-topic = "semaforo/datos"  # Tema donde se enviarán los datos
+mqttUser = "admin"  # Usuario del broker MQTT
+mqttPassword = "admin"  # Contraseña del broker MQTT
+topic = "semaforo/data"  # Tema donde se enviarán los datos
 
 # Función de conexión al broker
 def on_connect(client, userdata, flags, rc):
@@ -31,8 +31,13 @@ def send_data():
     json_data = json.dumps(data)
 
     # Publicar los datos en el tema MQTT
-    client.publish(topic, json_data)
-    print(f"Datos enviados: {json_data}")
+    result = client.publish(topic, json_data)
+
+    # Comprobar si la publicación fue exitosa
+    if result.rc == mqtt.MQTT_ERR_SUCCESS:
+        print(f"Datos enviados: {json_data}")
+    else:
+        print("Error al enviar los datos")
 
 # Crear el cliente MQTT
 client = mqtt.Client()
@@ -59,4 +64,3 @@ except KeyboardInterrupt:
 finally:
     client.loop_stop()
     client.disconnect()
-
