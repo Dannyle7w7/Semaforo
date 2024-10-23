@@ -1,8 +1,7 @@
-# pip install paho-mqtt Para librerías
-
 import paho.mqtt.client as mqtt
 import json
 import time
+import requests
 
 # Configuración del broker MQTT
 broker = "192.168.100.73"  # Cambia esto por la IP de tu broker
@@ -11,6 +10,12 @@ mqttUser = "admin"  # Usuario del broker MQTT
 mqttPassword = "admin"  # Contraseña del broker MQTT
 topic = "semaforo/data"  # Tema donde se enviarán los datos
 
+# Coordenadas para Chihuahua
+lat = 28.635  # Latitud de Chihuahua
+lon = -106.088  # Longitud de Chihuahua
+api_key = "TU_API_KEY"  # Reemplaza esto con tu API Key de OpenWeatherMap
+url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}&units=metric"  # Añade &units=metric para obtener la temperatura en Celsius
+
 # Función de conexión al broker
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
@@ -18,12 +23,36 @@ def on_connect(client, userdata, flags, rc):
     else:
         print(f"Error de conexión: {rc}")
 
+# Función para obtener la temperatura
+def get_temperature():
+    try:
+        response = requests.get(url)
+        data = response.json()
+
+        # Mostrar la respuesta completa
+        print("Respuesta completa de la API:", data)
+
+        # Verificar si existe la clave 'main' en la respuesta
+        if 'main' in data:
+            temperatura = data['main']['temp']
+        else:
+            temperatura = "No disponible"
+            print("Error al obtener la temperatura: 'main' no encontrada")
+
+        return temperatura
+    except Exception as e:
+        print(f"Error al obtener la temperatura: {e}")
+        return "No disponible"
+
 # Función para enviar datos
 def send_data():
-    # Datos estáticos que simulan los enviados por la ESP8266
+    temperatura = get_temperature()  # Obtener temperatura de la API
+    hora_actual = time.strftime("%H:%M")  # Obtener hora actual
+
+    # Datos a enviar
     data = {
-        "hora": "14:35",
-        "temperatura": "25.6",
+        "hora": hora_actual,
+        "temperatura": temperatura,
         "color": "verde"
     }
 
