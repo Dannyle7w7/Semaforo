@@ -13,7 +13,7 @@ topic = "semaforo/data"  # Tema donde se enviarán los datos
 # Coordenadas para Chihuahua
 lat = 28.635  # Latitud de Chihuahua
 lon = -106.088  # Longitud de Chihuahua
-api_key = "TU_API_KEY"  # Reemplaza esto con tu API Key de OpenWeatherMap
+api_key = "3b0aeb5a413ba9e1fc40954e0db731d3"  # Reemplaza esto con tu API Key de OpenWeatherMap
 url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}&units=metric"  # Añade &units=metric para obtener la temperatura en Celsius
 
 # Función de conexión al broker
@@ -46,8 +46,9 @@ def get_temperature():
 
 # Función para enviar datos
 def send_data():
-    temperatura = get_temperature()  # Obtener temperatura de la API
-    hora_actual = time.strftime("%H:%M")  # Obtener hora actual
+    #temperatura = get_temperature()  # Obtener temperatura de la API
+    temperatura = 30.4
+    hora_actual = time.strftime("%H:%M:%S")  # Obtener hora actual
 
     # Datos a enviar
     data = {
@@ -87,7 +88,7 @@ client.loop_start()
 try:
     while True:
         send_data()
-        time.sleep(5)  # Envía los datos cada 5 segundos
+        time.sleep(1)  # Envía los datos cada 5 segundos
 except KeyboardInterrupt:
     print("Desconexión")
 finally:
