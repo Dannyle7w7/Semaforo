@@ -4,7 +4,7 @@ import time
 import requests
 
 # Configuración del broker MQTT
-broker = "192.168.100.73"  # Cambia esto por la IP de tu broker
+broker = "10.20.13.44"  # Cambia esto por la IP de tu broker
 port = 1883
 mqttUser = "admin"  # Usuario del broker MQTT
 mqttPassword = "admin"  # Contraseña del broker MQTT
