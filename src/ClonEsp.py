@@ -4,7 +4,7 @@ import time
 import requests
 
 # Configuración del broker MQTT
-broker = "10.20.13.44"  # Cambia esto por la IP de tu broker
+broker = "192.168.1.18"  # Cambia esto por la IP de tu broker
 port = 1883
 mqttUser = "admin"  # Usuario del broker MQTT
 mqttPassword = "admin"  # Contraseña del broker MQTT
@@ -54,7 +54,7 @@ def send_data():
     data = {
         "hora": hora_actual,
         "temperatura": temperatura,
-        "color": "verde"
+        "color": "amarillo"
     }
 
     # Convertir los datos a formato JSON

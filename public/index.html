@@ -28,8 +28,9 @@
     <div class="container text-center">
         <div class="row">
             <!--Semaforo-->
-            <div class="col-md-4 rounded-3 p-3 bg-success">
+            <div id="semaforo" class="col-md-4 rounded-3 p-3 bg-success">
                 <img src="images/semaforos.png" alt="Semaforo" width="250">
+                <p id="color" class="card-text">Cargando...</p>
             </div>
 
             <div class="col-md-8">
@@ -120,14 +121,16 @@
 
     var textFecha = document.getElementById('text_fecha');
     var date = new Date();
-
-    var dateUTC = date.toLocaleString();
-
     var diaActual = getDayOfWeek(date);
 
     function getDayOfWeek(date) {
-        var days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        return days[date.getDay()];
+        //var days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const formato = {
+            weekday: 'long'
+        };
+        
+        var day = date.toLocaleDateString('es-ES',formato);
+        return day;
     }
 
     function cambiarFondo(){
@@ -145,6 +148,7 @@
         switch(diaActual) {
 
             case 'Monday':
+            case 'lunes':
                 Lun.style.background = '#a5139c';
                 Mar.style.background = '#f034e4';
                 Mie.style.background = '#f034e4';
@@ -154,6 +158,7 @@
                 Dom.style.background = '#f034e4';
                 break;
             case 'Tuesday':
+            case 'martes':
                 Lun.style.background = '#f034e4';
                 Mar.style.background = '#a5139c';
                 Mie.style.background = '#f034e4';
@@ -163,6 +168,7 @@
                 Dom.style.background = '#f034e4';
                 break;
             case 'Wednesday':
+            case 'miércoles':
                 Lun.style.background = '#f034e4';
                 Mar.style.background = '#f034e4';
                 Mie.style.background = '#a5139c';
@@ -172,6 +178,7 @@
                 Dom.style.background = '#f034e4';
                 break;
             case 'Thursday':
+            case 'jueves':
                 Lun.style.background = '#f034e4';
                 Mar.style.background = '#f034e4';
                 Mie.style.background = '#f034e4'
@@ -181,6 +188,7 @@
                 Dom.style.background = '#f034e4';
                 break;
             case 'Friday':
+            case 'viernes':
                 Lun.style.background = '#f034e4';
                 Mar.style.background = '#f034e4';
                 Mie.style.background = '#f034e4';
@@ -190,6 +198,7 @@
                 Dom.style.background = '#f034e4';
                 break;
             case 'Saturday':
+            case 'sábado':
                 Lun.style.background = '#f034e4';
                 Mar.style.background = '#f034e4';
                 Mie.style.background = '#f034e4';
@@ -199,6 +208,7 @@
                 Dom.style.background = '#f034e4';
                 break;
             case 'Sunday':
+            case 'domingo':
                 Lun.style.background = '#f034e4';
                 Mar.style.background = '#f034e4';
                 Mie.style.background = '#f034e4';
@@ -220,12 +230,39 @@
     }
 
     function getDate(){
-        
-        textFecha.textContent = date.toDateString();
+        const formatoFecha = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        }
+        textFecha.textContent = date.toLocaleDateString('es-ES', formatoFecha);
         textFecha.style.display = 'block';
 
         colocarDiaActual();
     }
 
+    function actualizarSemaforo(colorSemaforo){
+       
+        var semaforo = document.getElementById('semaforo');
+
+        switch(colorSemaforo){
+            case 'verde':
+                semaforo.className = 'col-md-4 rounded-3 p-3 bg-success'; // Fondo verde
+                break;
+            case 'amarillo':
+                semaforo.className = 'col-md-4 rounded-3 p-3 bg-warning'; // Fondo amarillo
+                break;
+            case 'rojo':
+                semaforo.className = 'col-md-4 rounded-3 p-3 bg-danger'; // Fondo rojo
+                break;
+            default:
+                semaforo.className = 'col-md-4 rounded-3 p-3 bg-secondary'; // Fondo cuando no se envian los demás colores
+                break;  
+        }
+    }
+
+    getDate();
+    //setInterval(actualizarSemaforo,1000); //Actualizacion del semaforo cada segundo
     
 </script>
