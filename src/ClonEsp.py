@@ -14,7 +14,7 @@ topic = "semaforo/data"  # Tema donde se enviarán los datos
 lat = 28.635  # Latitud de Chihuahua
 lon = -106.088  # Longitud de Chihuahua
 api_key = "3b0aeb5a413ba9e1fc40954e0db731d3"  # Reemplaza esto con tu API Key de OpenWeatherMap
-url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}&units=metric"  # Añade &units=metric para obtener la temperatura en Celsius
+url = ""  # Añade &units=metric para obtener la temperatura en Celsius
 
 # Función de conexión al broker
 def on_connect(client, userdata, flags, rc):
