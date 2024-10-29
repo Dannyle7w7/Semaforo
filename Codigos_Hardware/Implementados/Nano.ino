@@ -254,7 +254,9 @@ Serial.print(now.second());
 Serial.print(":");
 Serial.print(temperature, 1);
 Serial.print(":");
-Serial.println(semaphoreState);
+Serial.print(semaphoreState);
+Serial.print(":");
+Serial.println(humidity);
 /*
   lcd.setCursor(0, 1);
   lcd.print("Tex:");

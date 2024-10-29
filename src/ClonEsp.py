@@ -54,7 +54,9 @@ def send_data():
     data = {
         "hora": hora_actual,
         "temperatura": temperatura,
-        "color": "amarillo"
+        "color": "amarillo",
+        "humedad": "50",
+        "ip": "192.20.10.20"
     }
 
     # Convertir los datos a formato JSON
