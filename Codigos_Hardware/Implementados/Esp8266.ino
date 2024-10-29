@@ -1,5 +1,3 @@
-Codigo 22 10 2024
-
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <PubSubClient.h>
@@ -14,7 +12,7 @@ WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
 
 // Cambia esto por la IP de tu broker
-const char* mqttServer = "10.20.8.199"; // IP de tu broker
+const char* mqttServer = "10.20.14.250"; // IP de tu broker
 const int mqttPort = 1883;  // Puerto del broker
 const char* mqttUsername = "admin"; // Nombre de usuario para la autenticación
 const char* mqttPassword = "admin"; // Contraseña para la autenticación
@@ -28,6 +26,7 @@ String temperatura = "N/A";
 String hora = "N/A";
 String color = "N/A";
 String humedad = "N/A";
+String ip = "N/A";
 bool mqttConnected = false; // Variable para rastrear la conexión al broker
 
 void setup() {
@@ -45,7 +44,7 @@ void setup() {
   Serial.println("");
   Serial.print("Conectado a WiFi. Dirección IP: ");
   Serial.println(WiFi.localIP());
-
+  ip = WiFi.localIP().toString();
   // Configura el servidor MQTT
   mqttClient.setServer(mqttServer, mqttPort);
 
@@ -80,7 +79,7 @@ void loop() {
     if (separatorIndex1 != -1 && separatorIndex2 != -1 && separatorIndex3 != -1 && separatorIndex4 != -1 && separatorIndex5 != -1 ) {
       hora = data.substring(0, separatorIndex3); // Hora completa (hh:mm:ss)
       temperatura = data.substring(separatorIndex3 + 1, separatorIndex4); // Temperatura
-      color = data.substring(separatorIndex4 + 1); // Estado del semáforo
+      color = data.substring(separatorIndex4 + 1,separatorIndex5); // Estado del semáforo
       humedad = data.substring(separatorIndex5 + 1);// Humedad en %
       // Publicar los datos en formato JSON a través de MQTT solo si está conectado
       if (mqttConnected) {
@@ -125,7 +124,7 @@ void handleRoot() {
   html += "document.getElementById('hora').innerHTML = 'Hora: ' + values[0];";
   html += "document.getElementById('temperatura').innerHTML = 'Temperatura: ' + values[1];";
   html += "document.getElementById('color').innerHTML = 'Estado del semaforo: ' + values[2];";
-  html += "document.getElementById('humedad').innerHTML = 'Humedad:%' + values[3];";
+  html += "document.getElementById('humedad').innerHTML = 'Humedad:' + values[3];";
   html += "});";
   html += "}";  
   html += "setInterval(fetchData, 1000);";  // Actualiza los datos cada 1 segundo
@@ -135,7 +134,7 @@ void handleRoot() {
   html += "<p id='hora'>Hora: " + hora + "</p>"; // Muestra la hora recibida
   html += "<p id='temperatura'>Temperatura: " + temperatura + "</p>"; // Muestra la temperatura recibida
   html += "<p id='color'>Estado del semaforo: " + color + "</p>"; // Muestra el estado del semáforo recibido
-  html += "<p id='humedad'>Humedad:% " + humedad + "</p>";
+  html += "<p id='humedad'>Humedad: " + humedad + "</p>";
   html += "</body></html>"; // Cierre del HTML
 
   // Enviar la respuesta HTTP con el código 200 (OK) y el contenido generado en 'html'
@@ -155,6 +154,7 @@ void sendMQTTData() {
   jsonDoc["temperatura"] = temperatura;
   jsonDoc["color"] = color;
   jsonDoc["humedad"] = humedad;
+  jsonDoc["ip"] = ip;
   char jsonBuffer[256];
   serializeJson(jsonDoc, jsonBuffer);
 
