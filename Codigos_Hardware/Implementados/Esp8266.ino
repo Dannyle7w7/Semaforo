@@ -13,7 +13,7 @@ PubSubClient mqttClient(wifiClient);
 
 // Cambia esto por la IP de tu broker
 const char* mqttServer = "10.20.14.250"; // IP de tu broker
-const int mqttPort = 1883;  // Puerto del broker
+const int mqttPort = 3011;  // Puerto del broker
 const char* mqttUsername = "admin"; // Nombre de usuario para la autenticación
 const char* mqttPassword = "admin"; // Contraseña para la autenticación
 const char* mqttTopic = "semaforo/data"; // Tema al que enviamos los datos

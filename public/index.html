@@ -47,6 +47,7 @@
                             <p class="card-text">Temperatura</p>
                             <p class="card-text fs-1" id="temperatura">Cargando...</p>
                             <p class="card-text fs-1" id="humedad">Cargando...</p>
+                            <p class="card-text fs-1" id="ip">Cargando...</p>
                         </div>
                     </div>
                 </div>
@@ -244,7 +245,7 @@
     }
 
     function actualizarSemaforo(colorSemaforo){
-       
+  
         var semaforo = document.getElementById('semaforo');
 
         switch(colorSemaforo){
@@ -253,6 +254,7 @@
                 break;
             case 'amarillo':
                 semaforo.className = 'col-md-4 rounded-3 p-3 bg-warning'; // Fondo amarillo
+              
                 break;
             case 'rojo':
                 semaforo.className = 'col-md-4 rounded-3 p-3 bg-danger'; // Fondo rojo

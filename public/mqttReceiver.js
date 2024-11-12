@@ -1,5 +1,5 @@
 // Conexión con el broker MQTT mediante WebSockets
-const client = mqtt.connect('ws://localhost:3012', {
+const client = mqtt.connect('ws://148.229.22.5:3012', {
     username: 'admin',
     password: 'admin'
 });
