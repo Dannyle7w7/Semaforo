@@ -7,7 +7,7 @@ const http = require('http');
 
 // Inicia el servidor Express
 const app = express();
-const port = 3000;
+const port = 3010;
 
 // Sirve los archivos estáticos desde la carpeta 'public'
 app.use(express.static(path.join(__dirname, 'public')));
@@ -18,8 +18,8 @@ app.listen(port, () => {
 });
 
 // Configuración del broker MQTT
-const mqttPort = 1883;  // Puerto donde estará escuchando el broker MQTT tradicional
-const websocketPort = 8888; // Puerto para WebSocket
+const mqttPort = 3011;  // Puerto donde estará escuchando el broker MQTT tradicional
+const websocketPort = 3012; // Puerto para WebSocket
 const USERNAME = 'admin';
 const PASSWORD = 'admin';
 
