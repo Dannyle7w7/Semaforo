@@ -1,0 +1,4 @@
+echo "semaforo.tar" >> .gitignore
+git add .gitignore
+git commit -m "Agregar semaforo.tar a .gitignore"
+git push origin main
