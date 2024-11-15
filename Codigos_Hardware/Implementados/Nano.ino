@@ -26,7 +26,7 @@ DHT dht(DHTPIN, DHTTYPE);
 rgb_lcd lcd;
 
 //Variables de cambio
-float Tiemporojo    =   60000;        //Tiempo que estara el rojo despues de presionar el boton MILIS
+float Tiemporojo    =   70000;        //Tiempo que estara el rojo despues de presionar el boton MILIS
 int Iniciosemaforo  =   6;             //Hora que empieza a trabajar con regularidad el semaforo 
 int Finalsemaforo   =   23;             //Hora que finaliza y se pone en amarillo 
 
@@ -223,7 +223,7 @@ void updateLCD(DateTime now) {
     if (currentMillis - lastMillis < 5000) {
       semaphoreState = "Verde";
     } else if (currentMillis - lastMillis < 10000) {
-      semaphoreState = "Ama";
+      semaphoreState = "Amarillo";
     } else if (currentMillis - lastMillis < Tiemporojo) {
       semaphoreState = "Rojo";
     }

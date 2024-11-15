@@ -26,11 +26,12 @@
     </nav>
 
     <div class="container text-center">
-        <div class="row">
+        <div class="row justify-content-center">
             <!--Semaforo-->
-            <div id="semaforo" class="col-md-4 rounded-3 p-3 bg-success">
+            <div id="semaforo" class="col-md-4 rounded-3 p-2  bg-success">
+                <p id="color" class="card-text fw-bold">Cargando...</p>
                 <img src="/Images/semaforos.png" alt="Semaforo" width="250">
-                <p id="color" class="card-text">Cargando...</p>
+                
             </div>
 
             <div class="col-md-8">
@@ -44,10 +45,17 @@
 
                     <div class="col align-content-center card" style="background-color:#34c149;">
                         <div class="card-body">
-                            <p class="card-text">Temperatura</p>
-                            <p class="card-text fs-1" id="temperatura">Cargando...</p>
-                            <p class="card-text fs-1" id="humedad">Cargando...</p>
-                            <p class="card-text fs-1" id="ip">Cargando...</p>
+                            <p class="card-text fw-bold">Temperatura</p>
+                            <label class="card-text fs-1" id="temperatura">Cargando...</label>
+                            <label class=" fs-1" > °C</label>
+                        </div>
+                    </div>
+
+                    <div class="col align-content-center card" style="background-color:#34b5c1;">
+                        <div class="card-body">
+                            <p class="card-text fw-bold">Humedad</p>
+                            <label class="card-text fs-1" id="humedad">Cargando...</label>
+                            <label class=" fs-1" > %</label>
                         </div>
                     </div>
                 </div>
@@ -99,11 +107,23 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
+
+        <div class="row">
+            <div class="col align-content-center card" style="background-color:#ffffff">
+                <div class="card-body">
+                    <p class="card-text fw-bold">IP</p>
+                    <p class="text-card" id="ip">Cargando...</p>
+                </div>
+            </div>
+        </div>
+
+        <div><label></label></div>
     </div>
  <!-- Incluye la librería MQTT.js desde un CDN -->
- <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+ <script src="/libs/mqtt.min.js"></script>
 
  <!-- Tu archivo mqttReceiver.js -->
  <script src="mqttReceiver.js"></script>     
@@ -245,18 +265,18 @@
     }
 
     function actualizarSemaforo(colorSemaforo){
-  
+       
         var semaforo = document.getElementById('semaforo');
 
         switch(colorSemaforo){
-            case 'verde':
+            case 'Verde':
                 semaforo.className = 'col-md-4 rounded-3 p-3 bg-success'; // Fondo verde
                 break;
-            case 'amarillo':
+            case 'Ama':
+            case 'Amarillo':
                 semaforo.className = 'col-md-4 rounded-3 p-3 bg-warning'; // Fondo amarillo
-              
                 break;
-            case 'rojo':
+            case 'Rojo':
                 semaforo.className = 'col-md-4 rounded-3 p-3 bg-danger'; // Fondo rojo
                 break;
             default:
@@ -267,5 +287,5 @@
 
     getDate();
     //setInterval(actualizarSemaforo,1000); //Actualizacion del semaforo cada segundo
-    
+
 </script>

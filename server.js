@@ -45,7 +45,7 @@ wsServer.on('connection', function (ws) {
     console.log('Cliente WebSocket conectado');
 });
 
-// Inicia el servidor WebSocket en el puerto 8888
+// Inicia el servidor WebSocket en el puerto 3012   
 server.listen(websocketPort, function () {
     console.log(`Broker MQTT corriendo en WebSocket puerto ${websocketPort}`);
 });
