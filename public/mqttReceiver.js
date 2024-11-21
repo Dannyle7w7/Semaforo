@@ -20,11 +20,13 @@ function connectToBroker() {
         console.log(`Mensaje en ${topic}: ${message.toString()}`);
         try {
             const data = JSON.parse(message);
-            document.getElementById('hora').innerText = data.hora || 'No disponible';
+            //document.getElementById('hora').innerText = data.hora || 'No disponible';
             document.getElementById('temperatura').innerText = data.temperatura || 'No disponible';
             document.getElementById('color').innerText = data.color || 'No disponible';
             document.getElementById('humedad').innerText = data.humedad || 'No disponible';
             document.getElementById('ip').innerText = data.ip || 'No disponible';
+
+            compararHoras(data.hora);
             actualizarSemaforo(data.color);
         } catch (error) {
             console.error('Error al parsear JSON:', error);

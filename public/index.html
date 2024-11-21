@@ -26,6 +26,14 @@
     </nav>
 
     <div class="container text-center">
+        <div id="rowAlerta" class="row" >
+            <div class="col align-content-center">
+                <span id="alerta" class="alert alert-warning" style="display: none;"></span>
+            </div>
+        </div>
+
+        <div><label></label></div>
+
         <div class="row justify-content-center">
             <!--Semaforo-->
             <div id="semaforo" class="col-md-4 rounded-3 p-2  bg-success">
@@ -142,6 +150,8 @@
     var Dom = document.getElementById('Domingo');
 
     var textFecha = document.getElementById('text_fecha');
+    var horaSen = document.getElementById('hora');
+    var alerta = document.getElementById("alerta");
     var date = new Date();
     var diaActual = getDayOfWeek(date);
 
@@ -282,6 +292,29 @@
             default:
                 semaforo.className = 'col-md-4 rounded-3 p-3 bg-secondary'; // Fondo cuando no se envian los demás colores
                 break;  
+        }
+    }
+
+    function compararHoras(hora){
+        
+        //Formateamos Hora enviada desde el sensor
+        var arrayHoraSensor = hora.split(":");
+        var horas = parseInt(arrayHoraSensor[0],10);
+        var minutos = parseInt(arrayHoraSensor[0],10);
+        var segundos = parseInt(arrayHoraSensor[0],10);
+
+        //Crear fecha con hora enviada desde el sensor
+        var date2 = new Date(date.getFullYear(), date.getMonth(), date.getDate(), horas, minutos, segundos);
+        horaSen.textContent = date2.toLocaleTimeString('es-ES');
+
+        // Comparar la diferencia en minutos
+        var diferenciaMs = Math.abs(date - date2); // Diferencia en milisegundos
+        var diferenciaMinutos = Math.floor(diferenciaMs / (1000 * 60)); // Convertir a minutos
+
+        // Verificar si la diferencia es mayor o igual a 5 minutos
+        if (diferenciaMinutos >= 5) {
+            alerta.style.display = block;
+            alerta.textContent ="Hay una diferencia de " + diferenciaMinutos + " entre la Hora del Servidor y la Hora del Sensor. Verificar bateria.";
         }
     }
 
