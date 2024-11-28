@@ -1,17 +1,4 @@
-// Documentación de código para semáforo con Arduino
-// Este programa controla un sistema de semáforo utilizando un Arduino Nano. Su funcionalidad incluye:
-// - Gestión del encendido de luces del semáforo en función de horarios configurados.
-// - Manejo de un botón peatonal que modifica el flujo normal del semáforo.
-// - Monitoreo y visualización de la hora actual, temperatura y humedad.
-// - Manejo de un modo especial de horario y errores en el sistema.
-// - Uso de un watchdog para reiniciar el sistema en caso de fallos.
-//
-// Componentes utilizados:
-// - Módulo RTC DS3231 para sincronización de tiempo.
-// - Sensor DHT22 para capturar temperatura y humedad.
-// - Pantalla LCD RGB para mostrar datos.
-// - Sistema de botón peatonal con lógica de interrupción.
-
+//19 Noviembre 2024
 
 #include <Wire.h>
 #include <RTClib.h>
@@ -39,14 +26,10 @@ DHT dht(DHTPIN, DHTTYPE);
 rgb_lcd lcd;
 
 //Variables de cambio
-float Tiemporojo    =   30000;         //Este tiempo es un acumulado del verde amarillo siendo en total rojo 20 segundos 5 verde 5 amarillo
-float Tiempoverde   =   50000;         //Es ese tiempo poruqe es un acumlado de tiempo que es 5 de verde parpadenate 10 de amarillo y 20 de rojo dejando 20 segundo de verde
+float Tiemporojo    =   70000;        //Tiempo que estara el rojo despues de presionar el boton MILIS
 int Iniciosemaforo  =   6;             //Hora que empieza a trabajar con regularidad el semaforo 
-int Finalsemaforo   =   23;            //Hora que finaliza y se pone en amarillo 
-int Inicioestacionamiento  =7;         //Hora que empieza funcionar como uno nomral para el paso de administrativo
-int FinalEstacionamiento   =9;         //Hora que finaliza el funcionamiento normal y regresa a verde hasta que alguien presiona el boton
+int Finalsemaforo   =   23;             //Hora que finaliza y se pone en amarillo 
 
-bool Specialhour = false;
 bool pedestrianButtonPressed = false;
 unsigned long lastMillis = 0;
 unsigned long blinkMillis = 0;
@@ -143,21 +126,14 @@ void loop() {
 void handleNormalOperation() {
   DateTime now = rtc.now();
   int hour = now.hour();
-
 //Recordatorio el boton esta siempre en abierto
-  if(hour >= Inicioestacionamiento && hour < FinalEstacionamiento && !Specialhour && !pedestrianButtonPressed){
-    Specialhour = true;
-    lastMillis = millis();
-    blinkMillis = millis();
-    //                                                                                                     6                         7                               9                           23
-  }else if (digitalRead(BUTTON_PIN) == LOW && !pedestrianButtonPressed && !Specialhour && ((hour >= Iniciosemaforo && hour < Inicioestacionamiento) || (hour>= FinalEstacionamiento && hour<Finalsemaforo))) {
+  if (digitalRead(BUTTON_PIN) == LOW && !pedestrianButtonPressed) {
     pedestrianButtonPressed = true;
     lastMillis = millis();
     blinkMillis = millis();
   }
-  if(Specialhour){
-    handleSpecialSequence();
-  }else if (pedestrianButtonPressed) {
+
+  if (pedestrianButtonPressed) {
     handlePedestrianSequence();
   } else if (hour >= Iniciosemaforo && hour < Finalsemaforo) {
     handleRegularSequence();
@@ -189,46 +165,15 @@ void handlePedestrianSequence() {
     digitalWrite(GREEN2_PIN, LOW);
     digitalWrite(YELLOW1_PIN, HIGH);
     digitalWrite(YELLOW2_PIN, HIGH);
-  } else if (currentMillis - lastMillis < Tiemporojo) {  // 20 segundos en rojo
+  } else if (currentMillis - lastMillis < Tiemporojo) {  // 1 minutos en rojo
     digitalWrite(YELLOW1_PIN, LOW);
     digitalWrite(YELLOW2_PIN, LOW);
     digitalWrite(RED1_PIN, HIGH);
     digitalWrite(RED2_PIN, HIGH);
-  } else  {
+  } else {
     pedestrianButtonPressed = false;
     digitalWrite(RED1_PIN, LOW);
     digitalWrite(RED2_PIN, LOW);
-  }
-}
-
-void handleSpecialSequence() {
-  unsigned long currentMillis = millis();
-
-  if (currentMillis - lastMillis < 5000) {
-    if (currentMillis - blinkMillis > 500) {
-      greenBlinkState = !greenBlinkState;
-      digitalWrite(GREEN1_PIN, greenBlinkState);
-      digitalWrite(GREEN2_PIN, greenBlinkState);
-      blinkMillis = currentMillis;
-    }
-  } else if (currentMillis - lastMillis < 10000) {
-    digitalWrite(GREEN1_PIN, LOW);
-    digitalWrite(GREEN2_PIN, LOW);
-    digitalWrite(YELLOW1_PIN, HIGH);
-    digitalWrite(YELLOW2_PIN, HIGH);
-  } else if (currentMillis - lastMillis < Tiemporojo) {  // 20 segundos en rojo
-    digitalWrite(YELLOW1_PIN, LOW);
-    digitalWrite(YELLOW2_PIN, LOW);
-    digitalWrite(RED1_PIN, HIGH);
-    digitalWrite(RED2_PIN, HIGH);
-  } else if(currentMillis - lastMillis < Tiempoverde) {
-    digitalWrite(RED1_PIN, LOW);
-    digitalWrite(RED2_PIN, LOW);
-    digitalWrite(GREEN1_PIN, HIGH);
-    digitalWrite(GREEN2_PIN, HIGH);
-    
-  }else {
-    Specialhour = false;
   }
 }
 
@@ -273,18 +218,7 @@ void updateLCD(DateTime now) {
 
   // Determinar el estado del semáforo
   String semaphoreState = "Verde"; // Estado por defecto
-  if(Specialhour){
-    unsigned long currentMillis = millis();
-    if (currentMillis - lastMillis < 5000) {
-      semaphoreState = "Verde";
-    } else if (currentMillis - lastMillis < 10000) {
-      semaphoreState = "Amarillo";
-    } else if (currentMillis - lastMillis < Tiemporojo) {
-      semaphoreState = "Rojo";
-    }else if(currentMillis - lastMillis < Tiempoverde){
-      semaphoreState = "Verde";
-    }
-  }else if (pedestrianButtonPressed) {
+  if (pedestrianButtonPressed) {
     unsigned long currentMillis = millis();
     if (currentMillis - lastMillis < 5000) {
       semaphoreState = "Verde";
